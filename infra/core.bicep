@@ -97,7 +97,7 @@ resource sqlDb 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' =
   }
 }
 
-resource sqlConainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
   parent: sqlDb 
   name: '${prefix}-orders'
   properties: {
@@ -113,7 +113,7 @@ resource sqlConainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
   }
 }
 
-resource stateConainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+resource stateContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
   parent: sqlDb 
   name: '${prefix}-state'
   properties: {
