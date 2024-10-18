@@ -6,16 +6,25 @@
 
 // resourceGroup is a contextual parameter that we get when we run the deployment with az cli
 param location string = resourceGroup().location
+@minLength(3)
 param prefix string
 // vnet specific
 param vnetSettings object = {
   addressPrefixes: [
-    '10.0.0.0/20'
+    '10.0.0.0/19'
   ]
   subnets: [
     {
       name: 'subnet1'
-      addressPrefix: '10.0.0.0/22'
+      addressPrefix: '10.0.0.0/21'
+    }
+    {
+      name: 'acaAppSubnet'
+      addressPrefix: '10.0.8.0/21'
+    }
+    {
+      name: 'acaControlPlaneSubnet'
+      addressPrefix: '10.0.16.0/21'
     }
   ]
 }
@@ -99,7 +108,22 @@ resource sqlConainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
           '/id'
         ]
       }
-      indexingPolicy: {}
+    }
+    options: {}
+  }
+}
+
+resource stateConainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+  parent: sqlDb 
+  name: '${prefix}-state'
+  properties: {
+    resource: {
+      id: '${prefix}-state'
+      partitionKey: {
+        paths: [
+          '/partitionkey'
+        ]
+      }
     }
     options: {}
   }
@@ -161,4 +185,41 @@ resource cosmosPrivateEndpointDnsLink 'Microsoft.Network/privateEndpoints/privat
     ]
   }
 }
+
+// container stuffs
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
+  name: '${replace(prefix, '-', '')}acr${uniqueString(resourceGroup().id)}'
+  location: location
+  sku: {
+    name: 'Basic' // premium sku has tokens otherwise its username and password
+  }
+  properties: {
+    adminUserEnabled: true
+  }
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = {
+  name: '${prefix}-kv'
+  location: location
+  properties: {
+    enabledForDeployment: true
+    enabledForTemplateDeployment: true // allows us to pull values as secure strings in parameter files for deployments
+    enabledForDiskEncryption: true
+    enableRbacAuthorization: true
+    tenantId: tenant().tenantId
+    sku: {
+      name: 'standard'
+      family: 'A'
+    }
+  }
+}
+
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+  parent: keyVault
+  name: 'acrAdminPassword'
+  properties: {
+    value: containerRegistry.listCredentials().passwords[0].value
+  }
+}
+
 

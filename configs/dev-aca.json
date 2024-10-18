@@ -1,0 +1,20 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "prefix": {
+        "value": "lmbd-dev"
+      },
+      "vNetName": {
+        "value": "lmbd-dev-vnet-kter2lq3lnh2o"
+      },
+      "containerRegistryPassword": {
+        "reference": {
+          "keyVault": {
+            "id": ""
+           },
+          "secretName": "acrAdminPassword"
+        }
+       }
+    }
+  }
